@@ -1,0 +1,49 @@
+# Every hyperparameter for this recipe. Nothing numeric is hardcoded in the scripts.
+
+seed: 0
+
+data:
+  csv: data/Housing.csv
+  label: price
+  features:
+    - lotsize
+    - bedrooms
+    - bathrms
+    - stories
+    - driveway
+    - recroom
+    - fullbase
+    - gashw
+    - airco
+    - garagepl
+    - prefarea
+  train_split: 0.8
+  shuffle: true
+
+train:
+  # Both variants use the same optimizer and learning rate on purpose: the only
+  # intended difference between train_manual.py and train_nn.py is the abstraction.
+  optimizer: sgd          # sgd | adam  (adam is only available in the nn variant)
+  learning_rate: 0.01
+  num_iters: 1000
+  warmup_iters: 10        # untimed iterations before the benchmark window opens
+  log_every: 50
+
+bench:
+  devices: [cpu, gpu]
+
+predict:
+  # A house that actually exists in the space the model was fit on. Every value is
+  # within the observed range, and the binary columns are 0 or 1.
+  example:
+    lotsize: 8000
+    bedrooms: 4
+    bathrms: 2
+    stories: 2
+    driveway: 1
+    recroom: 1
+    fullbase: 1
+    gashw: 0
+    airco: 1
+    garagepl: 2
+    prefarea: 1

@@ -1,0 +1,9 @@
+# Requires Apple silicon, macOS >= 14.0, and a NATIVE arm64 Python >= 3.10.
+# Check with:  python3 -VV && python3 -c "import platform; print(platform.machine())"
+# machine() must print 'arm64'. An x86_64 Python under Rosetta will not resolve mlx.
+#
+# mlx-data publishes macosx_14_0_arm64 wheels only -- there is no Linux or x86 build.
+
+mlx>=0.32
+mlx-data>=0.2.0
+pyyaml>=6.0

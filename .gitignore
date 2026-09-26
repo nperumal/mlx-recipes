@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Repo-root scratch directory (not part of any recipe)
+/data/
+
+# Generated per-recipe artifacts
+checkpoints/
+results/
+*.npz
+*.safetensors
+*.gguf
+*.parquet
+
+# Small reference datasets live at recipes/<tier>/<name>/data/ and ARE committed
+# (see CONTRIBUTING.md §5). Large datasets are downloaded into a recipe-local
+# data/ directory and ignored by that recipe's own .gitignore.
+
+assets/scratch/

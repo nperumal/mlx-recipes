@@ -1,0 +1,27 @@
+# Every hyperparameter lives here. No magic numbers in the code.
+
+seed: 0
+
+data:
+  source: synthetic        # synthetic | <url or dataset name>
+  n_samples: 10000
+  n_features: 20
+  noise: 0.1
+  test_size: 0.2
+
+model:
+  # model-specific hyperparameters
+
+train:
+  method: gradient_descent  # e.g. closed_form | gradient_descent
+  learning_rate: 0.01
+  epochs: 100
+  batch_size: 256
+
+eval:
+  metrics: []
+  n_folds: 5
+
+bench:
+  devices: [cpu, gpu]
+  repeats: 5

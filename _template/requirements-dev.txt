@@ -1,0 +1,6 @@
+# Development only. A user running the recipe must never need these.
+# Tests that import anything here must be marked @pytest.mark.reference and skip
+# cleanly when it is absent.
+pytest>=8.0
+ruff>=0.6
+scikit-learn>=1.5

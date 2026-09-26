@@ -1,0 +1,3 @@
+# Development only. Running the recipe never needs these.
+pytest>=8.0
+ruff>=0.6

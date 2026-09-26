@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  purity:
+    # The purity rule (CONTRIBUTING.md section 1) is mechanical, so enforce it
+    # mechanically. Written so a grep that matches nothing and a grep that fails are
+    # distinguishable -- an earlier version treated both as "clean" and silently
+    # stopped checking.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No numpy, scikit-learn or scipy outside tests and plotting
+        run: |
+          test -d recipes || { echo "::error::recipes/ is missing"; exit 1; }
+          hits=$(grep -rnE '^[[:space:]]*(import|from)[[:space:]]+(numpy|sklearn|scipy)\b' \
+                   --include='*.py' recipes || true)
+          hits=$(printf '%s\n' "$hits" | grep -vE '/tests/|plotting\.py' || true)
+          if [ -n "$(printf '%s' "$hits" | tr -d '[:space:]')" ]; then
+            printf '%s\n' "$hits"
+            echo "::error::NumPy/sklearn/SciPy import outside tests or plotting (CONTRIBUTING.md section 1)"
+            exit 1
+          fi
+          echo "purity check passed"
+
+  test:
+    # MLX needs Apple silicon; macos-latest is arm64.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install recipe dependencies
+        run: |
+          pip install pytest
+          for req in recipes/*/*/requirements.txt; do pip install -r "$req"; done
+      - name: Run tests without dev extras
+        run: pytest -v -m "not reference"
