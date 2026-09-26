@@ -39,12 +39,9 @@ recipes/<tier>/<recipe-name>/
 ├── data_pipeline.py   # loading, splitting, scaling
 ├── train.py           # or train_<variant>.py when comparing implementations
 ├── evaluate.py        # the recipe's metrics, in MLX
-├── runner.py          # device selection, timing, memory, run records
 ├── predict.py         # or serve.py in the llm tier
-├── make_results.py    # results/*.json -> results.md
-├── Makefile           # make all reproduces everything
+├── Makefile           # make all runs it end to end
 ├── requirements.txt   # pinned
-├── results.md         # GENERATED — never hand-edited
 ├── data/              # small committed dataset, or gitignored downloads
 └── tests/
     └── test_correctness.py
@@ -57,15 +54,17 @@ need the same thing, rather than guessed at in advance. If you find yourself wan
 `common/` module while writing the second recipe in the repo, say so in the PR and we
 will pull it out of both.
 
-## 3. No magic numbers, no typed numbers
+## 3. No magic numbers
 
 Every hyperparameter lives in `config.yaml`. Learning rates, batch sizes, seeds,
 regularization strengths, split ratios.
 
-Every number in the README's results table is produced by `make results`, which writes
-`results.md`. Hand-copied benchmark tables are wrong within two commits. The table
-records: chip and RAM, macOS version, MLX version, wall clock, peak memory, and the
-metric.
+**Keep measurement out of the foundations tier.** A training script may print one
+timing line; it should not carry a benchmarking framework. These models are small, the
+numbers teach nothing about the model, and the apparatus buries the code a reader came
+for. If you do quote a number in a README, say which machine produced it. Recipes in
+the deep-learning and llm tiers are a different matter — there, performance is a real
+question and measuring it properly is part of the recipe.
 
 ## 4. Testing
 
@@ -100,6 +99,6 @@ Committed assets are otherwise limited to small generated plots.
 - [ ] `ruff check .` and `ruff format --check .` pass
 - [ ] `pytest` passes without dev extras installed
 - [ ] `make all` runs clean from a fresh clone on Apple silicon
-- [ ] `results.md` regenerated on your machine, and the README table matches it
 - [ ] README states what the recipe teaches, not just what it does
+- [ ] README has a Gotchas section, and it is specific
 - [ ] No NumPy or scikit-learn imports outside `tests/` and plotting

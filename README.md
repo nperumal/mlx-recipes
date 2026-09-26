@@ -15,15 +15,16 @@ Every recipe here:
 
 - runs end to end with a single command
 - keeps every hyperparameter in `config.yaml` — no magic numbers buried in code
-- reports wall-clock time, peak memory and a real metric, on a named Mac
-- **generates** those numbers rather than having them typed in: `make results` writes
-  `results.md`, so benchmark tables cannot silently rot
+- is readable top to bottom: the model and the training loop are the content, not
+  something you have to find between layers of scaffolding
+- says plainly where MLX surprised us, in a Gotchas section — the laziness of
+  `mx.eval`, missing ops, dtype defaults
 
 ## Recipes
 
 | Recipe | What it teaches |
 |---|---|
-| [foundations/linear-regression](recipes/foundations/linear-regression/) | `mx.grad` and a hand-written update vs `nn.Linear` + `mlx.optimizers` — the same fit at two levels of abstraction, plus how to benchmark a lazy framework without measuring the wrong thing |
+| [foundations/linear-regression](recipes/foundations/linear-regression/) | `mx.grad` and a hand-written update vs `nn.Linear` + `mlx.optimizers` — the same fit at two levels of abstraction, and when MLX actually computes anything |
 
 ## Pure MLX
 
@@ -62,6 +63,11 @@ make all
 
 Recipes are organised into tiers, each with its own spine. Only the first tier has
 anything in it today; the rest describe where this is going, not work that exists.
+
+Performance measurement is deliberately absent from the foundations tier. These models
+are small enough that timing them teaches nothing about the model, and benchmark
+scaffolding crowds out the code a reader came to see. It belongs in the later tiers,
+where "how fast, and how much memory" is a question people genuinely have.
 
 - **`foundations/`** — data → train → eval → predict. Tabular and classical models.
   These are not here because MLX is the best tool for fitting a linear regression; for

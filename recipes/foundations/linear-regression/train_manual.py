@@ -9,11 +9,11 @@ y are centred by the standardiser, so the least-squares intercept is zero.
 """
 
 import argparse
+import time
 from pathlib import Path
 
 import data_pipeline
 import mlx.core as mx
-import runner
 from evaluate import load_config, regression_metrics
 
 RECIPE_DIR = Path(__file__).resolve().parent
@@ -36,38 +36,29 @@ def train(cfg, data):
         )
 
     X, y = data["X_train"], data["y_train"]
-    loss_fn = make_loss(X, y)
-    loss_and_grad = mx.value_and_grad(loss_fn)
-
-    mx.random.seed(cfg["seed"])
-    w = 1e-6 * mx.random.normal((X.shape[1],))
-    mx.eval(w)
-
+    loss_and_grad = mx.value_and_grad(make_loss(X, y))
     lr = tcfg["learning_rate"]
 
-    # Warm up outside the timed window so kernel compilation is not counted.
-    for _ in range(tcfg["warmup_iters"]):
-        _, grad = loss_and_grad(w)
-        w = w - lr * grad
-        mx.eval(w)
-
-    # Re-initialise so the timed run starts from the same place a cold run would.
     mx.random.seed(cfg["seed"])
     w = 1e-6 * mx.random.normal((X.shape[1],))
     mx.eval(w)
 
     losses = []
-    with runner.Benchmark() as bench:
-        for _ in range(tcfg["num_iters"]):
-            loss, grad = loss_and_grad(w)
-            w = w - lr * grad
-            # Evaluate both so the graph stays shallow, but do NOT call .item():
-            # a host sync every iteration would dominate the measurement.
-            mx.eval(w, loss)
-            losses.append(loss)
+    tic = time.perf_counter()
+    for _ in range(tcfg["num_iters"]):
+        loss, grad = loss_and_grad(w)
+        w = w - lr * grad
+        # mx.eval is what actually runs the computation. MLX is lazy: without this
+        # the loop would only build an ever-deeper graph and nothing would execute.
+        # Note what is NOT here -- a .item() call. That would copy the loss to the
+        # host on every iteration, which is both slower and unnecessary.
+        mx.eval(w, loss)
+        losses.append(loss)
+    seconds = time.perf_counter() - tic
 
-    loss_history = [float(v.item()) for v in losses]
-    return w, bench, loss_history
+    # Now that the loop is finished, converting to Python floats is free of consequence.
+    history = [float(v.item()) for v in losses]
+    return w, seconds, history
 
 
 def main():
@@ -77,20 +68,23 @@ def main():
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    device = runner.select_device(args.device)
+    mx.set_default_device(mx.gpu if args.device == "gpu" else mx.cpu)
 
     data = data_pipeline.load(cfg)
-    w, bench, loss_history = train(cfg, data)
+    w, seconds, history = train(cfg, data)
 
     y_pred = data["y_scaler"].inverse(data["X_test"] @ w)
-    metrics = regression_metrics(data["y_test"], y_pred)
+    m = regression_metrics(data["y_test"], y_pred)
 
     ckpt_dir = RECIPE_DIR / "checkpoints"
     ckpt_dir.mkdir(exist_ok=True)
     mx.save_safetensors(str(ckpt_dir / "manual.safetensors"), {"w": w})
 
-    record, _ = runner.write_run("manual", device, cfg, metrics, bench, loss_history)
-    runner.report(record)
+    print(f"manual  RMSE ${m['rmse']:,.0f}  MAE ${m['mae']:,.0f}  R2 {m['r2']:.4f}")
+    print(
+        f"        final train loss {history[-1]:.5f}, "
+        f"{cfg['train']['num_iters']} iterations in {seconds:.2f}s on {args.device}"
+    )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,10 @@ Contract:
     - Reads every hyperparameter from config.yaml.
     - Pure MLX in the math path. No NumPy, no scikit-learn.
     - Seeds explicitly so a run is reproducible.
-    - Runs untimed warmup iterations before the benchmark window opens.
-    - Inside the timed loop: mx.eval on parameters and loss, never .item().
-    - Writes a run record via runner.write_run for make_results.py.
+    - Calls mx.eval inside the training loop, and does NOT call .item() there --
+      MLX is lazy, so mx.eval is what runs the computation, while .item() copies
+      back to the host on every iteration for no reason. Collect loss arrays and
+      convert them after the loop.
+    - Prints the metrics and a single timing line. Nothing more elaborate: this is a
+      teaching repo, and measurement apparatus crowds out the thing being taught.
 """

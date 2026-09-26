@@ -26,11 +26,6 @@ train:
   optimizer: sgd          # sgd | adam  (adam is only available in the nn variant)
   learning_rate: 0.01
   num_iters: 1000
-  warmup_iters: 10        # untimed iterations before the benchmark window opens
-  log_every: 50
-
-bench:
-  devices: [cpu, gpu]
 
 predict:
   # A house that actually exists in the space the model was fit on. Every value is

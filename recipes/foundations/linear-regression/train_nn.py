@@ -13,13 +13,13 @@ That second point is the argument for the abstraction, and config.yaml lets you 
 """
 
 import argparse
+import time
 from pathlib import Path
 
 import data_pipeline
 import mlx.core as mx
 import mlx.nn as nn
 import mlx.optimizers as optim
-import runner
 from evaluate import load_config, regression_metrics
 
 RECIPE_DIR = Path(__file__).resolve().parent
@@ -48,29 +48,20 @@ def train(cfg, data):
     loss_and_grad = nn.value_and_grad(model, loss_fn)
     mx.eval(model.parameters())
 
-    for _ in range(tcfg["warmup_iters"]):
-        _, grad = loss_and_grad(model, X, y)
-        optimizer.update(model, grad)
-        mx.eval(model.parameters(), optimizer.state)
-
-    # Reset to a cold model and optimizer for the timed run.
-    mx.random.seed(cfg["seed"])
-    model = nn.Linear(X.shape[1], 1)
-    optimizer = build_optimizer(tcfg["optimizer"], tcfg["learning_rate"])
-    loss_and_grad = nn.value_and_grad(model, loss_fn)
-    mx.eval(model.parameters())
-
     losses = []
-    with runner.Benchmark() as bench:
-        for _ in range(tcfg["num_iters"]):
-            loss, grad = loss_and_grad(model, X, y)
-            optimizer.update(model, grad)
-            # No .item() inside the loop -- see the note in runner.Benchmark.
-            mx.eval(model.parameters(), optimizer.state, loss)
-            losses.append(loss)
+    tic = time.perf_counter()
+    for _ in range(tcfg["num_iters"]):
+        loss, grad = loss_and_grad(model, X, y)
+        optimizer.update(model, grad)
+        # Same reasoning as train_manual.py: force the computation, but do not pull
+        # the value back to the host inside the loop. The optimizer carries state of
+        # its own (momentum, moments), so that has to be evaluated too.
+        mx.eval(model.parameters(), optimizer.state, loss)
+        losses.append(loss)
+    seconds = time.perf_counter() - tic
 
-    loss_history = [float(v.item()) for v in losses]
-    return model, bench, loss_history
+    history = [float(v.item()) for v in losses]
+    return model, seconds, history
 
 
 def main():
@@ -80,21 +71,24 @@ def main():
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    device = runner.select_device(args.device)
+    mx.set_default_device(mx.gpu if args.device == "gpu" else mx.cpu)
 
     data = data_pipeline.load(cfg)
-    model, bench, loss_history = train(cfg, data)
+    model, seconds, history = train(cfg, data)
 
     y_pred = data["y_scaler"].inverse(model(data["X_test"]).squeeze(-1))
-    metrics = regression_metrics(data["y_test"], y_pred)
+    m = regression_metrics(data["y_test"], y_pred)
 
     ckpt_dir = RECIPE_DIR / "checkpoints"
     ckpt_dir.mkdir(exist_ok=True)
     model.save_weights(str(ckpt_dir / "nn.safetensors"))
 
-    record, _ = runner.write_run("nn", device, cfg, metrics, bench, loss_history)
-    runner.report(record)
-    print(f"  bias after training: {model.bias.item():.6f}  (expected near zero)")
+    print(f"nn      RMSE ${m['rmse']:,.0f}  MAE ${m['mae']:,.0f}  R2 {m['r2']:.4f}")
+    print(
+        f"        final train loss {history[-1]:.5f}, "
+        f"{cfg['train']['num_iters']} iterations in {seconds:.2f}s on {args.device}"
+    )
+    print(f"        bias after training: {model.bias.item():.6f}  (expected near zero)")
 
 
 if __name__ == "__main__":
