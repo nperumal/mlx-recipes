@@ -1,0 +1,41 @@
+# Every hyperparameter for this recipe. Nothing numeric is hardcoded in the scripts.
+
+seed: 0
+
+data:
+  csv: data/penguins.csv
+  label: species
+  features:
+    - bill_length_mm
+    - bill_depth_mm
+    - flipper_length_mm
+    - body_mass_g
+  train_split: 0.8
+  shuffle: true
+
+binary:
+  # Adelie vs Chinstrap is the closest pair -- the narrowest margin of the three.
+  # Every pair is linearly separable in these four measurements, though, which is
+  # why l2 below is not optional. See the README's "separability" section.
+  classes: [Adelie, Chinstrap]
+  threshold: 0.5
+
+softmax:
+  classes: [Adelie, Chinstrap, Gentoo]
+
+train:
+  optimizer: sgd          # sgd | adam (softmax variant only)
+  learning_rate: 0.1
+  num_iters: 500
+  # Ridge penalty. NOT decorative: all three species pairs are linearly separable in
+  # these features, so the unpenalised maximum-likelihood estimate does not exist and
+  # ||w|| grows without bound. Set this to 0.0 and raise num_iters to watch it.
+  l2: 0.01
+
+predict:
+  # A penguin within the observed range of the data.
+  example:
+    bill_length_mm: 45.0
+    bill_depth_mm: 17.0
+    flipper_length_mm: 195
+    body_mass_g: 3800
