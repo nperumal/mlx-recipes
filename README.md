@@ -25,6 +25,7 @@ Every recipe here:
 | Recipe | What it teaches |
 |---|---|
 | [foundations/linear-regression](recipes/foundations/linear-regression/) | `mx.grad` and a hand-written update vs `nn.Linear` + `mlx.optimizers` — the same fit at two levels of abstraction, and when MLX actually computes anything |
+| [foundations/logistic-regression](recipes/foundations/logistic-regression/) | binary then softmax classification — the `p − y` gradient, computing losses from logits with `logaddexp`/`logsumexp`, vectorised confusion matrices and ROC, and why separable classes have no maximum-likelihood solution |
 
 ## Pure MLX
 
@@ -74,8 +75,8 @@ where "how fast, and how much memory" is a question people genuinely have.
   small tabular problems it usually isn't, and the recipes say so. They are here because
   they are the best on-ramp to the framework: the model is something you already
   understand, so all of your attention goes to `mx.array`, `mx.grad`, lazy evaluation,
-  device placement and `float32` defaults. Next up: logistic regression, and a
-  closed-form least squares recipe covering `mx.linalg` and conditioning.
+  device placement and `float32` defaults. Next up: a closed-form least squares
+  recipe covering `mx.linalg`, QR vs Cholesky and `float32` conditioning.
 - **`deep-learning/`** — data → train → eval → export. Real networks, real training
   loops, checkpointing and schedules.
 - **`llm/`** — data → train → eval → quantize → serve. The only tier where the full

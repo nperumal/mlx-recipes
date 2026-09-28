@@ -25,7 +25,7 @@ pip install -r requirements.txt
 make all
 ```
 
-Individual steps: `make data`, `make train`, `make eval`, `make results`.
+Individual steps: `make data`, `make train`, `make eval`, `make predict`.
 
 ## How it works
 

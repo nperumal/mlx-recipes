@@ -1,5 +1,5 @@
 # make all runs both variants end to end.
-.PHONY: all train train-binary train-softmax eval predict test lint clean
+.PHONY: all train train-binary train-softmax eval predict separability test lint clean
 
 DEVICE ?= gpu
 
@@ -16,6 +16,10 @@ train-softmax:
 eval:
 	python evaluate.py --variant binary
 	python evaluate.py --variant softmax
+
+# Reproduces the two claims in the README's separability section.
+separability:
+	python separability_demo.py --device $(DEVICE)
 
 predict:
 	python predict.py

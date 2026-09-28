@@ -33,6 +33,7 @@ through the framework once you trust it.
 ```sh
 pip install -r requirements.txt
 make all            # both variants
+make separability   # the diverging-weights demonstration below
 make predict        # classify one penguin
 make test           # 13 correctness tests, no extra dependencies
 ```
@@ -79,7 +80,7 @@ maximum-likelihood estimate *does not exist*. The optimizer can always lower the
 by scaling `w` up, pushing fitted probabilities closer to exactly 0 and 1, so `‖w‖`
 grows without bound and never converges.
 
-Set `train.l2: 0.0` in `config.yaml` and watch, for Adelie vs Chinstrap:
+Run `make separability` to reproduce both claims. For Adelie vs Chinstrap:
 
 | iterations | `l2 = 0.0` — ‖w‖ (train loss) | `l2 = 0.01` — ‖w‖ (train loss) |
 |---:|---:|---:|
@@ -89,7 +90,8 @@ Set `train.l2: 0.0` in `config.yaml` and watch, for Adelie vs Chinstrap:
 | 20,000 | 12.01 (1.7e-02) | 2.73 (2.0e-01) |
 
 The unpenalised column never settles. The penalised one is stationary after 2,000
-iterations.
+iterations. The same command shows all three pairs reaching 1.0000 training accuracy
+with the loss still falling, which is what "separable" looks like from the inside.
 
 The part worth internalising: **the metrics never told you.** Test accuracy and AUC are
 identical either way. Nothing in a standard report reveals that the parameters are
