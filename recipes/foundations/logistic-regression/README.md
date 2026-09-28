@@ -42,9 +42,9 @@ Add `DEVICE=cpu` to run on the CPU instead of the GPU.
 
 ## Results
 
-Apple M2 Max, macOS 14.4.1, MLX 0.32.2, seed 0. These came out identical on a
-Linux CPU build of MLX during development — same seed, same splits, same
-decisions — so they should reproduce on your machine too.
+Apple M2 Max, macOS 14.4.1, MLX 0.32.2. The shuffle, the split and the
+initialisation are all seeded from `seed: 0` in `config.yaml`, so `make all`
+reproduces these numbers exactly.
 
 ```
 binary  Adelie vs Chinstrap  (positive class: Chinstrap)
