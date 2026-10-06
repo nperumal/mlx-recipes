@@ -54,10 +54,42 @@ need the same thing, rather than guessed at in advance. If you find yourself wan
 `common/` module while writing the second recipe in the repo, say so in the PR and we
 will pull it out of both.
 
-## 3. No magic numbers
+## 3. Warm-ups
 
-Every hyperparameter lives in `config.yaml`. Learning rates, batch sizes, seeds,
-regularization strengths, split ratios.
+A **warm-up** is a smaller kind of entry, exempt from most of the layout above. It
+exists because the contract in section 2 was written for recipes that load a dataset,
+and some of the most useful things to teach have no dataset at all.
+
+An entry qualifies as a warm-up when all of these hold:
+
+- it has **no dataset** — the inputs are generated, or written inline, or are the
+  complete input space (a truth table, say);
+- it is **short enough to read in one sitting**, roughly a hundred lines of code;
+- its **hyperparameters are part of the explanation**. When the README says "learning
+  rate 0.1, converged in 4 epochs", moving `0.1` into a YAML file makes the code
+  harder to follow, not easier.
+
+A warm-up is exempt from `config.yaml`, `data_pipeline.py`, `predict.py`, `Makefile`,
+`data/` and `tests/`. Hyperparameters live as named module-level constants instead.
+
+It still must:
+
+- run with a bare `python <script>.py` and no arguments
+- be pure MLX in the math path (section 1 applies in full)
+- pass `ruff check` and `ruff format --check`
+- carry a README with **What it teaches** and **Gotchas** sections
+- **say in its README that it is a warm-up and why** — a reader who arrives from a
+  full recipe should not have to guess why the structure differs
+
+If a warm-up grows a dataset or a second model, it has become a recipe. Convert it.
+
+[`recipes/foundations/perceptron/`](recipes/foundations/perceptron/) is the
+reference warm-up.
+
+## 4. No magic numbers
+
+Every hyperparameter lives in `config.yaml`, or in named module-level constants in a
+warm-up. Learning rates, batch sizes, seeds, regularization strengths, split ratios.
 
 **Keep measurement out of the foundations tier.** A training script may print one
 timing line; it should not carry a benchmarking framework. These models are small, the
@@ -66,7 +98,7 @@ for. If you do quote a number in a README, say which machine produced it. Recipe
 the deep-learning and llm tiers are a different matter — there, performance is a real
 question and measuring it properly is part of the recipe.
 
-## 4. Testing
+## 5. Testing
 
 Four kinds of test, none of which need an external library:
 
@@ -82,7 +114,7 @@ You may additionally add a parity test against an external reference. It must be
 `@pytest.mark.reference` and skip cleanly when the reference isn't installed, and the
 reference must appear only in `requirements-dev.txt`.
 
-## 5. Data and size
+## 6. Data and size
 
 No weights and no checkpoints in git, ever.
 
@@ -94,11 +126,13 @@ experience than carrying it in the repo. Anything larger is downloaded by
 
 Committed assets are otherwise limited to small generated plots.
 
-## 6. Before opening a PR
+## 7. Before opening a PR
 
 - [ ] `ruff check .` and `ruff format --check .` pass
-- [ ] `pytest` passes without dev extras installed
-- [ ] `make all` runs clean from a fresh clone on Apple silicon
-- [ ] README states what the recipe teaches, not just what it does
+- [ ] `pytest` passes without dev extras installed (recipes)
+- [ ] `make all` runs clean from a fresh clone on Apple silicon (recipes), or every
+      script runs with a bare `python <script>.py` (warm-ups)
+- [ ] README states what it teaches, not just what it does
 - [ ] README has a Gotchas section, and it is specific
+- [ ] A warm-up says in its README that it is one, and why
 - [ ] No NumPy or scikit-learn imports outside `tests/` and plotting

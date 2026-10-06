@@ -1,6 +1,6 @@
 """Correctness tests for the logistic-regression recipe.
 
-Per CONTRIBUTING.md section 4: synthetic recovery, cross-path agreement, gradient
+Per CONTRIBUTING.md section 5: synthetic recovery, cross-path agreement, gradient
 check, known answer. Nothing here needs a library outside MLX.
 
 The gradient tests are the interesting ones -- they check the identity the README

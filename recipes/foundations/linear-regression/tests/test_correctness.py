@@ -1,6 +1,6 @@
 """Correctness tests for the linear-regression recipe.
 
-Four kinds, per CONTRIBUTING.md section 4, none of which need an external library:
+Four kinds, per CONTRIBUTING.md section 5, none of which need an external library:
 synthetic recovery, cross-path agreement, gradient check, known answer.
 """
 

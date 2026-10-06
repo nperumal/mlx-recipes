@@ -1,6 +1,6 @@
 """Correctness tests for <recipe name>.
 
-Four kinds, none needing an external library — see CONTRIBUTING.md §4:
+Four kinds, none needing an external library — see CONTRIBUTING.md section 5:
 
     test_synthetic_recovery   generate from known parameters, assert recovery
     test_paths_agree          closed form and gradient descent reach the same answer
