@@ -25,7 +25,7 @@ Every recipe here:
 | Recipe | What it teaches |
 |---|---|
 | [foundations/linear-regression](recipes/foundations/linear-regression/) | `mx.grad` and a hand-written update vs `nn.Linear` + `mlx.optimizers` — the same fit at two levels of abstraction, and when MLX actually computes anything |
-| [foundations/perceptron](recipes/foundations/perceptron/) *(warm-up)* | a single neuron on NAND, learned two ways — Rosenblatt's 1958 update rule with a step function, then gradient descent with a sigmoid, and why `mx.grad` through a step function returns zeros |
+| [foundations/perceptron](recipes/foundations/perceptron/) *(warm-up)* | 1958 to 1986 in four files — Rosenblatt's update rule on NAND, the same gate by gradient descent, the XOR problem a single neuron provably cannot solve, and the hidden layer that does, backpropagated by hand and then by `mx.grad` |
 | [foundations/logistic-regression](recipes/foundations/logistic-regression/) | binary then softmax classification — the `p − y` gradient, computing losses from logits with `logaddexp`/`logsumexp`, vectorised confusion matrices and ROC, and why separable classes have no maximum-likelihood solution |
 
 Entries marked *(warm-up)* are deliberately smaller: no dataset, no config file, no
