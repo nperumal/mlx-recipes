@@ -55,16 +55,10 @@ No dataset to download: the four rows of the truth table are the entire input sp
 
 ## Results
 
-Seed 0 throughout, and every run is deterministic — the same four commands reproduce
+Apple M2 Max, macOS 14.4.1, MLX 0.32.2. Seed 0 throughout, and every run is deterministic — the same four commands reproduce
 these exactly.
 
-<!-- Numbers below were produced on a CPU build of MLX 0.32.3. Re-run the four
-     scripts on Apple silicon and replace this comment with the chip and MLX
-     version, as the other recipes do. -->
-
-**`perceptron.py`** — the 1958 rule:
-
-```
+## perceptron.py
 epoch  1: mistakes 1/4  w = [+0.00, +0.00]  b = +0.00
 epoch  2: mistakes 3/4  w = [-0.10, -0.10]  b = -0.10
 epoch  3: mistakes 1/4  w = [+0.00, +0.00]  b = +0.20
@@ -73,72 +67,76 @@ epoch  4: mistakes 0/4  w = [-0.10, -0.10]  b = +0.10
 converged after 4 epochs
   w = [-0.10, -0.10]   b = +0.10
   boundary: x2 = -1.00 * x1 +1.00
-```
 
-The mistake count goes 1 → 3 → 1 → 0. The perceptron rule does not descend
-monotonically, because there is no quantity it is descending.
+  x1  x2 | target  pred
+   0   0 |   1      1   ok
+   0   1 |   1      1   ok
+   1   0 |   1      1   ok
+   1   1 |   0      0   ok
+## perceptron_nn.py
+why not just differentiate the step function?
+  x               [-2.0, -0.5, 0.0, 0.5, 2.0]
+  d/dx step(x)    [0.0, 0.0, 0.0, 0.0, 0.0]   <- no signal
+  d/dx sigmoid(x) [0.105, 0.235, 0.25, 0.235, 0.105]
 
-**`perceptron_nn.py`** — gradient descent:
-
-```
-d/dx step(x)    [0.0, 0.0, 0.0, 0.0, 0.0]   <- no signal
-d/dx sigmoid(x) [0.105, 0.235, 0.25, 0.235, 0.105]
-
+gradient descent, SGD(lr=0.1), 2000 iterations
   loss 0.081891
   w = [-4.23, -4.23]   b = +6.54
   boundary: x2 = -1.00 * x1 +1.55
-```
 
-**Same slope, 40x the magnitude.** Both found the same separating direction. The
-perceptron rule stopped as soon as the four points were classified; gradient descent
-kept pushing the probabilities toward 0 and 1, which inflates `|w|` without moving
-the line. That is the separability divergence from the
-[logistic-regression](../logistic-regression/) recipe, visible on four points.
+  x1  x2 | target   P(1)   pred
+   0   0 |   1    0.9986    1   ok
+   0   1 |   1    0.9095    1   ok
+   1   0 |   1    0.9095    1   ok
+   1   1 |   0    0.1274    0   ok
 
-## XOR: the limitation, demonstrated
+Same boundary as perceptron.py, found a different way. The perceptron rule
+stops the moment it classifies everything correctly; gradient descent keeps
+pushing the line toward higher confidence, which is why |w| here is larger.
+## mlp.py
+hand-written backprop, 2 hidden units, lr=1.0, 10000 epochs, seed 0
+  epoch     1: MSE 0.250016
+  epoch  2000: MSE 0.001894
+  epoch  4000: MSE 0.000733
+  epoch  6000: MSE 0.000449
+  epoch  8000: MSE 0.000323
+  epoch 10000: MSE 0.000251
 
-NAND is linearly separable, so one neuron suffices. XOR is not: no straight line puts
-`{(0,1), (1,0)}` on one side and `{(0,0), (1,1)}` on the other.
+  final MSE 0.000251
 
-`mlp_nn.py` trains a single neuron on it first:
+  x1  x2 | target   out    pred
+   0   0 |   0    0.0152    0   ok
+   0   1 |   1    0.9830    1   ok
+   1   0 |   1    0.9829    1   ok
+   1   1 |   0    0.0138    0   ok
 
-```
+A single neuron cannot do this at any learning rate or for any number of
+epochs. Two layers can, and nothing else changed.
+## mlp_nn.py
+XOR, Adam(lr=0.1), 3000 iterations, seed 0
+
 single neuron (the model perceptron.py trains)
   loss 0.6931   accuracy 2/4
+  x1  x2 | target   P(1)   pred
    0   0 |   0    0.5000    1   XX
    0   1 |   1    0.5000    1   ok
    1   0 |   1    0.5000    1   ok
    1   1 |   0    0.5000    1   XX
-```
+  ln 2 = 0.6931. A loss of exactly that, with P(1) = 0.5 on every
+  input, is the model predicting the base rate because it has nothing better.
+  No straight line separates XOR, so there is nothing to find.
 
-`0.6931` is `ln 2` exactly, and the probability is `0.5000` on all four inputs. The
-model is not struggling — it is predicting the base rate because it has nothing
-better. There is no line to find.
-
-Minsky and Papert published that limitation in 1969 and it emptied the field for most
-of a decade. The fix is one hidden layer, which needs backpropagation, which needs a
-differentiable activation — which is why the step function had to go.
-
-Add the hidden layer and the same optimizer, on the same data, for the same number of
-steps:
-
-```
 two layers, 4 hidden units
   loss 0.0000   accuracy 4/4
+  x1  x2 | target   P(1)   pred
    0   0 |   0    0.0000    0   ok
    0   1 |   1    1.0000    1   ok
    1   0 |   1    1.0000    1   ok
    1   1 |   0    0.0000    0   ok
-```
 
-`mlp.py` reaches the same place with backpropagation written by hand — sigmoid
-activations, two hidden units, MSE, 10,000 epochs:
-
-```
-  epoch     1: MSE 0.250016
-  epoch  2000: MSE 0.001894
-  epoch 10000: MSE 0.000251
-```
+  Same data, same optimizer, same number of steps. The only change is one
+  hidden layer with a nonlinearity -- and mx.grad derived every gradient
+  that mlp.py spells out by hand.
 
 ## Gotchas
 
